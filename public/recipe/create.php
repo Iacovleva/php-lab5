@@ -1,55 +1,52 @@
+<?php
+require_once __DIR__ . '/../../src/db.php';
+
+$pdo = getPDO();
+$categories = $pdo->query("SELECT id, name FROM categories ORDER BY name")->fetchAll();
+?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Добавить рецепт</title>
+    <title>Добавление рецепта</title>
 </head>
 <body>
     <h1>Добавить рецепт</h1>
-    <form action="/src/handlers/recipe/create.php" method="POST">
-        <!-- Название рецепта -->
-        <label for="title">Название рецепта:</label>
-        <input type="text" id="title" name="title" required>
-        <br><br>
+    <form method="post" action="/recipe-book/src/handlers/recipe/create.php">
+        <label>Название:<br>
+            <input type="text" name="title" required>
+        </label><br><br>
 
-        <!-- Категория рецепта -->
-        <label for="category">Категория:</label>
-        <select id="category" name="category" required>
-            <option value="Завтрак">Завтрак</option>
-            <option value="Обед">Обед</option>
-            <option value="Ужин">Ужин</option>
-            <option value="Десерт">Десерт</option>
-        </select>
-        <br><br>
+        <label>Категория:<br>
+            <select name="category" required>
+                <?php foreach ($categories as $cat): ?>
+                    <option value="<?= $cat->id ?>"><?= htmlspecialchars($cat->name) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label><br><br>
 
-        <!-- Ингредиенты -->
-        <label for="ingredients">Ингредиенты:</label>
-        <textarea id="ingredients" name="ingredients" rows="5" required></textarea>
-        <br><br>
+        <label>Ингредиенты:<br>
+            <textarea name="ingredients" required></textarea>
+        </label><br><br>
 
-        <!-- Описание -->
-        <label for="description">Описание рецепта:</label>
-        <textarea id="description" name="description" rows="5" required></textarea>
-        <br><br>
+        <label>Описание:<br>
+            <textarea name="description" required></textarea>
+        </label><br><br>
 
-        <!-- Тэги -->
-        <label for="tags">Тэги:</label>
-        <select id="tags" name="tags[]" multiple>
-            <option value="Вегетарианское">Вегетарианское</option>
-            <option value="Диетическое">Диетическое</option>
-            <option value="Сладкое">Сладкое</option>
-            <option value="Острое">Острое</option>
-        </select>
-        <br><br>
+        <label>Теги:<br>
+            <select name="tags[]" multiple>
+                <option value="вегетарианское">Вегетарианское</option>
+                <option value="быстро">Быстро</option>
+                <option value="острое">Острое</option>
+            </select>
+        </label><br><br>
 
-        <!-- Шаги приготовления -->
-        <label for="steps">Шаги приготовления:</label>
-        <textarea id="steps" name="steps" rows="5" required></textarea>
-        <br><br>
+        <label>Шаги приготовления:<br>
+            <textarea name="steps"></textarea>
+        </label><br><br>
 
-        <!-- Кнопка отправки -->
-        <button type="submit">Отправить</button>
+        <button type="submit">Сохранить</button>
     </form>
 </body>
 </html>

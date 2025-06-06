@@ -1,53 +1,52 @@
 <?php
-echo "Обработчик доступен!";
 
-// Указываем путь к файлу хранения рецептов
-$recipesFile = __DIR__ . '/../../../storage/recipes.txt';
+declare(strict_types=1);
+require_once __DIR__ . '/../../db.php';
 
-// Проверяем, что запрос пришёл методом POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    die('Неподдерживаемый метод запроса.');
+$pdo = getPDO();
+
+$data = [
+    'title' => trim($_POST['title'] ?? ''),
+    'category' => (int) ($_POST['category'] ?? 0),
+    'ingredients' => trim($_POST['ingredients'] ?? ''),
+    'description' => trim($_POST['description'] ?? ''),
+    'tags' => isset($_POST['tags']) ? implode(',', $_POST['tags']) : '',
+    'steps' => trim($_POST['steps'] ?? ''),
+];
+
+$errors = [];
+
+if ($data['title'] === '') {
+    $errors['title'] = 'Название обязательно';
+}
+if ($data['ingredients'] === '') {
+    $errors['ingredients'] = 'Ингредиенты обязательны';
+}
+if ($data['description'] === '') {
+    $errors['description'] = 'Описание обязательно';
 }
 
-// Получаем данные из формы
-$title = trim($_POST['title']);
-$category = trim($_POST['category']);
-$ingredients = trim($_POST['ingredients']);
-$description = trim($_POST['description']);
-$tags = isset($_POST['tags']) ? $_POST['tags'] : [];
-$steps = trim($_POST['steps']);
-
-// Валидация данных
-$errors = [];
-if (empty($title)) $errors['title'] = 'Название рецепта обязательно.';
-if (empty($category)) $errors['category'] = 'Категория обязательна.';
-if (empty($ingredients)) $errors['ingredients'] = 'Ингредиенты обязательны.';
-if (empty($description)) $errors['description'] = 'Описание обязательно.';
-if (empty($steps)) $errors['steps'] = 'Шаги приготовления обязательны.';
-
-// Если есть ошибки, возвращаем их обратно в форму
-if (!empty($errors)) {
-    session_start();
-    $_SESSION['errors'] = $errors;
-    header('Location: /public/recipe/create.php');
+if ($errors) {
+    echo "<h2>Ошибки:</h2><ul>";
+    foreach ($errors as $e) {
+        echo "<li>$e</li>";
+    }
+    echo "</ul><a href='/recipe-book/public/recipe/create.php'>Назад</a>";
     exit;
 }
 
-// Формируем массив данных рецепта
-$recipe = [
-    'id' => uniqid(),
-    'title' => $title,
-    'category' => $category,
-    'ingredients' => $ingredients,
-    'description' => $description,
-    'tags' => $tags,
-    'steps' => $steps,
-    'created_at' => date('Y-m-d H:i:s'),
-];
+$stmt = $pdo->prepare("
+    INSERT INTO recipes (title, category, ingredients, description, tags, steps)
+    VALUES (:title, :category, :ingredients, :description, :tags, :steps)
+");
 
-// Сохраняем рецепт в файл
-file_put_contents($recipesFile, json_encode($recipe) . PHP_EOL, FILE_APPEND);
+$stmt->execute([
+    ':title' => $data['title'],
+    ':category' => $data['category'],
+    ':ingredients' => $data['ingredients'],
+    ':description' => $data['description'],
+    ':tags' => $data['tags'],
+    ':steps' => $data['steps'],
+]);
 
-// Перенаправляем на главную страницу после успешного сохранения
-header('Location: /public/index.php');
-exit;
+echo "✅ Рецепт добавлен! <a href='/recipe-book/public/recipe/create.php'>Добавить ещё</a>";
